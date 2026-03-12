@@ -4,7 +4,6 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { useState, useEffect } from 'react'
 
-// Tipos para organizar os dados (boa prática)
 type Perfil = {
   id: string;
   cidade: string;
@@ -18,7 +17,6 @@ type User = {
 };
 
 export default function PainelFuncional() {
-  // --- ESTADO DO COMPONENTE ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [user, setUser] = useState<User | null>(null);
@@ -26,13 +24,11 @@ export default function PainelFuncional() {
   const [todosPerfis, setTodosPerfis] = useState<Perfil[]>([]);
   const [mensagem, setMensagem] = useState('');
 
-  // --- CLIENTE SUPABASE ---
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // --- FUNÇÕES ---
   const buscarTodosPerfis = async () => {
     const { data } = await supabase.from('perfis_profissionais').select('*');
     if (data) setTodosPerfis(data as Perfil[]);
@@ -81,7 +77,6 @@ export default function PainelFuncional() {
     }
   };
 
-  // --- RENDERIZAÇÃO (O que aparece na tela) --- // <--- CORRIGIDO: AGORA ESTÁ DENTRO DA FUNÇÃO
   return (
     <div className="p-8 font-sans bg-gray-100 min-h-screen">
       <h1 className="text-5xl font-bold text-center mb-10 text-gray-800">Plataforma de Profissionais</h1>
@@ -129,4 +124,4 @@ export default function PainelFuncional() {
       </div>
     </div>
   );
-} // <--- A FUNÇÃO TERMINA AQUI, DEPOIS DO RETURN
+}

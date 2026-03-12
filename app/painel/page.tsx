@@ -30,7 +30,7 @@
                 <label className="font-semibold">Biografia:</label>
                 <textarea value={perfil?.biografia || ''} onChange={(e) => setPerfil(prev => prev ? {...prev, biografia: e.target.value} : null)} className="w-full p-2 border rounded" rows={3}/>
               </div>
-              {/* LINHA ABAIXO FOI ATUALIZADA */}
+              {/* A LINHA DO BOTÃO SALVAR JÁ ESTAVA CORRETA */}
               <button onClick={handleSalvarPerfil} className="w-full py-2 px-4 bg-green-600 text-white font-bold rounded hover:bg-green-700">Salvar Alterações</button>
               <button onClick={handleLogout} className="w-full py-2 px-4 bg-red-600 text-white font-bold rounded hover:bg-red-700 mt-2">Sair</button>
             </div>

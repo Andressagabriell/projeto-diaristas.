@@ -1,13 +1,92 @@
-  // --- RENDERIZAÇÃO (O que aparece na tela) ---
+// Local: app/painel/page.tsx
+'use client'
 
+import { createBrowserClient } from '@supabase/ssr'
+import { useState, useEffect } from 'react'
+
+// Tipos para organizar os dados (boa prática)
+type Perfil = {
+  id: string;
+  cidade: string;
+  biografia: string;
+  nota_media: number;
+};
+
+type User = {
+  id: string;
+  email: string;
+};
+
+export default function PainelFuncional() {
+  // --- ESTADO DO COMPONENTE ---
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const [perfil, setPerfil] = useState<Perfil | null>(null);
+  const [todosPerfis, setTodosPerfis] = useState<Perfil[]>([]);
+  const [mensagem, setMensagem] = useState('');
+
+  // --- CLIENTE SUPABASE ---
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  // --- FUNÇÕES ---
+  const buscarTodosPerfis = async () => {
+    const { data } = await supabase.from('perfis_profissionais').select('*');
+    if (data) setTodosPerfis(data as Perfil[]);
+  };
+
+  const buscarMeuPerfil = async (userId: string) => {
+    const { data } = await supabase.from('perfis_profissionais').select('*').eq('usuario_id', userId).single();
+    if (data) setPerfil(data as Perfil);
+  };
+
+  useEffect(() => {
+    buscarTodosPerfis();
+  }, []);
+
+  useEffect(() => {
+    if (user) buscarMeuPerfil(user.id);
+  }, [user]);
+
+  const handleLogin = async () => {
+    setMensagem('Entrando...');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setMensagem('Erro: Credenciais inválidas.');
+    } else if (data.user) {
+      setUser(data.user as User);
+      setMensagem('Login bem-sucedido!');
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setPerfil(null);
+    setMensagem('Você saiu.');
+  };
+
+  const handleSalvarPerfil = async () => {
+    if (!perfil) return;
+    setMensagem('Salvando...');
+    const { error } = await supabase.from('perfis_profissionais').update({ cidade: perfil.cidade, biografia: perfil.biografia }).eq('id', perfil.id);
+    if (error) {
+      setMensagem('Erro ao salvar: ' + error.message);
+    } else {
+      setMensagem('Perfil salvo com sucesso!');
+      buscarTodosPerfis();
+    }
+  };
+
+  // --- RENDERIZAÇÃO (O que aparece na tela) --- // <--- CORRIGIDO: AGORA ESTÁ DENTRO DA FUNÇÃO
   return (
     <div className="p-8 font-sans bg-gray-100 min-h-screen">
       <h1 className="text-5xl font-bold text-center mb-10 text-gray-800">Plataforma de Profissionais</h1>
-
-      {/* SEÇÃO DE LOGIN E PERFIL */}
       <div className="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-lg mb-10">
         {!user ? (
-          // MOSTRA LOGIN SE NÃO ESTIVER LOGADO
           <div>
             <h2 className="text-2xl font-bold mb-4">Acessar meu Painel</h2>
             <div className="space-y-3">
@@ -17,7 +96,6 @@
             </div>
           </div>
         ) : (
-          // MOSTRA O PAINEL DO PERFIL SE ESTIVER LOGADO
           <div>
             <h2 className="text-2xl font-bold mb-4">Meu Perfil (Editável)</h2>
             <div className="space-y-3">
@@ -30,7 +108,6 @@
                 <label className="font-semibold">Biografia:</label>
                 <textarea value={perfil?.biografia || ''} onChange={(e) => setPerfil(prev => prev ? {...prev, biografia: e.target.value} : null)} className="w-full p-2 border rounded" rows={3}/>
               </div>
-              {/* A LINHA DO BOTÃO SALVAR JÁ ESTAVA CORRETA */}
               <button onClick={handleSalvarPerfil} className="w-full py-2 px-4 bg-green-600 text-white font-bold rounded hover:bg-green-700">Salvar Alterações</button>
               <button onClick={handleLogout} className="w-full py-2 px-4 bg-red-600 text-white font-bold rounded hover:bg-red-700 mt-2">Sair</button>
             </div>
@@ -38,8 +115,6 @@
         )}
         {mensagem && <p className="text-center mt-4 font-medium">{mensagem}</p>}
       </div>
-
-      {/* SEÇÃO DA LISTA PÚBLICA DE PROFISSIONAIS */}
       <div>
         <h2 className="text-3xl font-bold mb-6 text-center">Profissionais Disponíveis</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -54,3 +129,4 @@
       </div>
     </div>
   );
+} // <--- A FUNÇÃO TERMINA AQUI, DEPOIS DO RETURN

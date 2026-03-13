@@ -1,57 +1,56 @@
 'use client'
 
-import { useState } from "react"
+import { useEffect,useState } from "react"
+import { supabase } from "@/lib/supabaseClient"
+import { useRouter } from "next/navigation"
 
-export default function PainelPage() {
+export default function PainelPage(){
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const router = useRouter()
+  const [user,setUser] = useState<any>(null)
 
-  const handleLogin = () => {
-    console.log("login")
+  useEffect(()=>{
+
+    const checkUser = async()=>{
+
+      const { data } = await supabase.auth.getUser()
+
+      if(!data.user){
+        router.push("/login")
+      }else{
+        setUser(data.user)
+      }
+    }
+
+    checkUser()
+
+  },[])
+
+  const logout = async()=>{
+
+    await supabase.auth.signOut()
+    router.push("/login")
+
   }
 
-  return (
-    <div className="p-8 font-sans bg-gray-100 min-h-screen">
+  return(
 
-      <h1 className="text-5xl font-bold text-center mb-10 text-gray-800">
-        Plataforma de Profissionais
+    <div className="p-10">
+
+      <h1 className="text-3xl font-bold mb-6">
+        Painel do Usuário
       </h1>
 
-      <div className="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-lg mb-10">
+      {user && (
+        <p>Logado como: {user.email}</p>
+      )}
 
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Acessar meu Painel</h2>
-
-          <div className="space-y-3">
-
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded"
-            />
-
-            <input
-              type="password"
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
-            />
-
-            <button
-              onClick={handleLogin}
-              className="w-full py-2 px-4 bg-blue-600 text-white font-bold rounded hover:bg-blue-700"
-            >
-              Entrar
-            </button>
-
-          </div>
-        </div>
-
-      </div>
+      <button
+        onClick={logout}
+        className="bg-red-500 text-white p-2 mt-6"
+      >
+        Sair
+      </button>
 
     </div>
   )
